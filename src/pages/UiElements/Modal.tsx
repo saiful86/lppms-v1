@@ -1,12 +1,16 @@
-
 import React from 'react';
-import { Modal, Form, Input, InputNumber, Button, DatePicker } from 'antd';
+//import moment from "moment";
+import { Modal, Form, Input, InputNumber, Button, DatePicker, Select } from 'antd';
 
+const ModalCalendar = ({ visible, onClose, onSubmit, selectedDate}) => {
 
-const ModalCalendar = ({ visible, onClose, onSubmit  }) => {
-
+  console.log(selectedDate, 'ModalCalendar-> Selected Date');
 
   const [form] = Form.useForm();
+
+  const dateFormat = "YYYY-MM-DD";
+
+  form.setFieldValue('date',selectedDate)
 
   const handleOk = () => {
     form
@@ -45,53 +49,100 @@ const ModalCalendar = ({ visible, onClose, onSubmit  }) => {
       <Form form={form} layout="vertical" name="myForm">
       <Form.Item
           name="date"
-          label="Date"
+          label="Plan Date"
           rules={[{ required: true, message: 'Please enter the date!' }]}
         >
-          <DatePicker style={{ width: '100%' }} />
-        </Form.Item>
+          <Input readOnly={true}/>
+        {/*<DatePicker style={{ width: '100%' }}  format={dateFormat} />*/}
+      </Form.Item>
+
         <Form.Item
-          name="supplier"
+          name="supplierId"
           label="Supplier"
           rules={[{ required: true, message: 'Please enter the supplier!' }]}
         >
-          <Input />
+          <Select
+            //showSearch
+            placeholder="Select Supplier"
+            optionFilterProp="children"
+            // onChange={onChange}
+            // onSearch={onSearch}
+            // filterOption={filterOption}
+            style={{ width: '100%' }}
+            options={[
+              {
+                value: '1',
+                label: 'GDL',
+              },
+              {
+                value: '2',
+                label: 'Vector',
+              },
+              {
+                value: '3',
+                label: 'Turja',
+              },
+            ]}
+          />
         </Form.Item>
         <Form.Item
-          name="material"
+          name="itemId"
           label="Material"
           rules={[{ required: true, message: 'Please enter the material!' }]}
         >
-          <Input />
+          <Select 
+            //showSearch
+            placeholder="Select Material"
+            style={{ width: '100%' }}
+            options={[
+              {
+                value: '1',
+                label: 'Hard Lead',
+              },
+              {
+                value: '2',
+                label: 'Pure Lead 99.97% & 99.985% ',
+              },
+              {
+                value: '3',
+                label: 'Lead Antimony 2.75%',
+              },
+              {
+                value: '4',
+                label: 'Lead Antimony 3.2%',
+              },
+            ]}
+          />
         </Form.Item>
         <Form.Item
-          name="rate"
-          label="Rate"
+          name="itemRate"
+          label="Item Rate"
           rules={[{ required: true, message: 'Please enter the rate!' }]}
         >
-          <InputNumber min={0} step={0.1} style={{ width: '100%' }} />
+          <InputNumber min={0} step={0.1} style={{ width: '100%' }}  placeholder="Enter Item Rate"/>
         </Form.Item>
         <Form.Item
           name="vat"
           label="VAT"
           rules={[{ required: true, message: 'Please enter the VAT!' }]}
         >
-          <InputNumber min={0} step={0.1} style={{ width: '100%' }} />
+          <InputNumber min={0} step={0.1} style={{ width: '100%' }} placeholder="Enter VAT" />
         </Form.Item>
         <Form.Item
           name="ait"
           label="AIT"
           rules={[{ required: true, message: 'Please enter the AIT!' }]}
         >
-          <InputNumber min={0} step={0.1} style={{ width: '100%' }}/>
+          <InputNumber min={0} step={0.1} style={{ width: '100%' }} placeholder="Enter AIT" />
         </Form.Item>
         <Form.Item
-          name="quantity"
+          name="qty"
           label="Quantity"
           rules={[{ required: true, message: 'Please enter the quantity!' }]}
         >
-          <InputNumber min={0} step={1} style={{ width: '100%' }}/>
+          <InputNumber min={0} step={1} style={{ width: '100%' }} placeholder="Enter Item Quantity in MT"/>
         </Form.Item>
+
       </Form>
     </Modal>
   );

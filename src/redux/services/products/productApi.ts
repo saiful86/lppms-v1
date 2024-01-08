@@ -6,7 +6,7 @@ export const transTypeApi = baseApi.injectEndpoints({
     // get all  plans
     getAllPlans: build.query({
       query: (arg: Record<string, any>) => ({
-        url: `/api/test/plans`,
+        url: `/api/PurchasePlan/list`,
         method: "GET",
         params: arg,
         // params: {
@@ -19,10 +19,11 @@ export const transTypeApi = baseApi.injectEndpoints({
       }),
       providesTags: [tagTypes.plans],
     }),
+    
     // create a new vat rebate type
     addMaterialData: build.mutation({
       query: (data) => ({
-        url: "/api/test/addPlan",
+        url: "/api/PurchasePlan/addPlanForSupplier",
         method: "POST",
         data,
       }),
