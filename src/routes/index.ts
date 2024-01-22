@@ -1,5 +1,8 @@
 import { lazy } from 'react';
 
+const PurchasePlan = lazy(() => import('../pages/PurchasePlan'));
+const PaymentPlan = lazy(() => import('../pages/PaymentPlan'));
+
 const Calendar = lazy(() => import('../pages/Calendar'));
 const Chart = lazy(() => import('../pages/Chart'));
 const FormElements = lazy(() => import('../pages/Form/FormElements'));
@@ -11,6 +14,18 @@ const Alerts = lazy(() => import('../pages/UiElements/Alerts'));
 const Buttons = lazy(() => import('../pages/UiElements/Buttons'));
 
 const coreRoutes = [
+  {
+    path: '/purchase-plan',
+    title: 'PurchasePlan',
+    component: PurchasePlan,
+  },
+
+  {
+    path: '/payment-plan',
+    title: 'PaymentPlan',
+    component: PaymentPlan,
+  },
+
   {
     path: '/calendar',
     title: 'Calender',

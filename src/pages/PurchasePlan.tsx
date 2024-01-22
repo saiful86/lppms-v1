@@ -1,9 +1,8 @@
 import React, { useState , useLayoutEffect, useRef} from 'react';
 import type { Dayjs } from 'dayjs';
-//import dayjs from 'dayjs';
 import moment from "moment";
 import type { BadgeProps, CalendarProps } from 'antd';
-import { Badge, Calendar, Select, Modal, Form,Alert, Input, Button, message,Typography, Row, Col, Radio, theme} from 'antd';
+import { Badge, Calendar, Select,Input, message,Typography, Row, Col, Radio} from 'antd';
 import {
   EditOutlined,
   SaveOutlined,
@@ -17,14 +16,11 @@ import {
   useAddPlanForSupplierDataMutation,
 } from '../redux/services/products/productApi';
 
-import Loading from '../loading';
 import dayjs from 'dayjs';
 import MyFormModal from '../pages/UiElements/Modal';
 import 'react-tooltip/dist/react-tooltip.css'
-//import { Tooltip as ReactTooltip } from 'react-tooltip'
 import { Tooltip } from 'react-tooltip'
 import LoadingModal from './UiElements/LoadingModal';
-
 
 const getMonthData = (value: Dayjs) => {
   if (value.month() === 8) {
@@ -32,7 +28,7 @@ const getMonthData = (value: Dayjs) => {
   }
 };
 
-const MyCalendar = () => {
+const PurchasePlan = () => {
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -579,8 +575,8 @@ const MyCalendar = () => {
   );
 };
 
-export default MyCalendar;
+export default PurchasePlan;
+
 function setLavorazione(arg0: any) {
   throw new Error('Function not implemented.');
 }
-

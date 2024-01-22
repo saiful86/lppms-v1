@@ -1,9 +1,9 @@
 import React, { useState , useLayoutEffect, useRef} from 'react';
 import type { Dayjs } from 'dayjs';
-//import dayjs from 'dayjs';
 import moment from "moment";
 import type { BadgeProps, CalendarProps } from 'antd';
-import { Badge, Calendar, Select, Modal, Form,Alert, Input, Button, message,Typography, Row, Col, Radio, theme} from 'antd';
+import { Badge, Calendar, Select, Input, message,Typography, Row, Col, Radio} from 'antd';
+
 import {
   EditOutlined,
   SaveOutlined,
@@ -17,11 +17,9 @@ import {
   useAddPlanForSupplierDataMutation,
 } from '../redux/services/products/productApi';
 
-import Loading from '../loading';
 import dayjs from 'dayjs';
 import MyFormModal from '../pages/UiElements/Modal';
 import 'react-tooltip/dist/react-tooltip.css'
-//import { Tooltip as ReactTooltip } from 'react-tooltip'
 import { Tooltip } from 'react-tooltip'
 import LoadingModal from './UiElements/LoadingModal';
 
@@ -32,7 +30,7 @@ const getMonthData = (value: Dayjs) => {
   }
 };
 
-const MyCalendar = () => {
+const PaymentPlan = () => {
 
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -109,6 +107,7 @@ const MyCalendar = () => {
       day,
       planDate,
       totalQty,
+      totalAmount,
       hasUnprocessedQty,
       suppliers,
     }: {
@@ -118,6 +117,7 @@ const MyCalendar = () => {
       day:number;
       planDate: string; // Add the type for the 'date' property
       totalQty : number;
+      totalAmount : number;
       hasUnprocessedQty:boolean;
       suppliers : {
         childId:number;
@@ -147,6 +147,7 @@ const MyCalendar = () => {
       day,
       planDate,
       totalQty,
+      totalAmount,
       hasUnprocessedQty,
       suppliers,
     }),
@@ -181,9 +182,9 @@ const MyCalendar = () => {
     // Map the filtered data to the desired format for the calendar
     if(filteredData && filteredData.length > 0){
       const listData = filteredData.map(
-        (item: { totalQty: any; suppliers: any, hasUnprocessedQty: boolean }) => ({
+        (item: { totalAmount: any; suppliers: any, hasUnprocessedQty: boolean }) => ({
           type: item.hasUnprocessedQty?'error':'success',
-          content: `${item.totalQty}`,
+          content: `${item.totalAmount}`,
           suppliers: item.suppliers
         }),
       );
@@ -304,7 +305,7 @@ const MyCalendar = () => {
                 <>
                  <a
                   data-tooltip-id="my-tooltip"
-                  data-tooltip-content={supplier.supplierName +', '+ supplier.totalQty + "M" + itemName}
+                  data-tooltip-content={supplier.supplierName +', '+ supplier.totalAmount + "Tk" + itemName}
                   data-tooltip-place="top"
                   data-tooltip-type="success">
                   <BookFilled style={{ color: supplier.supplierColorCode}}/></a>
@@ -312,7 +313,6 @@ const MyCalendar = () => {
               )
             })}
           </div>
-          <PlusCircleOutlined className="sticky-plus" type="primary" onClick={() => showModal(currentDateString)} />
         </div>
         <div className="events">
           {suppliers.length > 0 || totalDayQty > 0.0 || isEditing ? (
@@ -339,7 +339,7 @@ const MyCalendar = () => {
                             backgroundColor: '#D5EEFF',
                             borderRadius: '3px',
                             color: 'black',
-                          }}> MT </div>
+                          }}> Tk </div>
                           
                           <SaveOutlined onClick={()=>handleSave(currentDateString)} />
 
@@ -357,7 +357,7 @@ const MyCalendar = () => {
                             backgroundColor: '#D5EEFF',
                             borderRadius: '3px',
                             color: 'black',
-                          }}> MT </div>
+                          }}> Tk </div>
                            <EditOutlined onClick={()=>handleEdit(totalDayQty)}  style={{height:27}}/>
                         </React.Fragment>
                       )}
@@ -367,7 +367,7 @@ const MyCalendar = () => {
                 ))
           ):(
             <div style={{float:'right', paddingTop:'26px',paddingRight:'5px'}}>
-              <EditOutlined onClick={handleEdit} />
+              { /* <EditOutlined onClick={handleEdit} /> */}
             </div>
           )}
           
@@ -464,7 +464,7 @@ const MyCalendar = () => {
 
           return (
             <div style={{ padding: 16 }}>
-              <Typography.Title level={4}> Purchase Plan </Typography.Title>
+              <Typography.Title level={4}> Payment Plan </Typography.Title>
               
                {/* start custom div */}
               <div style={{ width: '50%', paddingTop : 10  }}>
@@ -500,7 +500,7 @@ const MyCalendar = () => {
                       color: 'white',
                     }}
                   >
-                    MT
+                    Tk
                   </p>
                 </div>
                 {/*
@@ -579,7 +579,8 @@ const MyCalendar = () => {
   );
 };
 
-export default MyCalendar;
+export default PaymentPlan;
+
 function setLavorazione(arg0: any) {
   throw new Error('Function not implemented.');
 }

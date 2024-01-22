@@ -20,8 +20,18 @@ export const transTypeApi = baseApi.injectEndpoints({
       providesTags: [tagTypes.plans],
     }),
     
-    // create a new vat rebate type
-    addMaterialData: build.mutation({
+    // add a purchase plan 
+    addPurchasePlanData: build.mutation({
+      query: (data) => ({
+        url: "/api/PurchasePlan/addAmountForPlan",
+        method: "POST",
+        data,
+      }),
+      invalidatesTags: [tagTypes.plans],
+    }),
+    
+    // add plan for supplier
+    addPlanForSupplierData: build.mutation({
       query: (data) => ({
         url: "/api/PurchasePlan/addPlanForSupplier",
         method: "POST",
@@ -47,6 +57,7 @@ export const transTypeApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: [tagTypes.plans],
     }),
+
     // update ac department
     updateTransaction: build.mutation({
       query: (data) => ({
@@ -61,7 +72,8 @@ export const transTypeApi = baseApi.injectEndpoints({
 
 export const {
   useGetAllPlansQuery,
-  useAddMaterialDataMutation,
+  useAddPurchasePlanDataMutation,
+  useAddPlanForSupplierDataMutation,
   useGetSingleTransactionQuery,
   useAddTransactionMutation,
   useUpdateTransactionMutation,

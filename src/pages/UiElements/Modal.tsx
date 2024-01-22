@@ -123,25 +123,46 @@ const ModalCalendar = ({ visible, onClose, onSubmit, selectedDate}) => {
         </Form.Item>
         <Form.Item
           name="vat"
-          label="VAT"
+          label="VAT %"
           rules={[{ required: true, message: 'Please enter the VAT!' }]}
         >
           <InputNumber min={0} step={0.1} style={{ width: '100%' }} placeholder="Enter VAT" />
         </Form.Item>
         <Form.Item
           name="ait"
-          label="AIT"
+          label="AIT %"
           rules={[{ required: true, message: 'Please enter the AIT!' }]}
         >
           <InputNumber min={0} step={0.1} style={{ width: '100%' }} placeholder="Enter AIT" />
         </Form.Item>
-        <Form.Item
-          name="qty"
-          label="Quantity"
-          rules={[{ required: true, message: 'Please enter the quantity!' }]}
+        <div
+          style={{
+            width:'100%',
+            display: 'flex',
+            alignItems: 'center',
+            paddingBottom: '10px',
+          }}
         >
-          <InputNumber min={0} step={1} style={{ width: '100%' }} placeholder="Enter Item Quantity in MT"/>
-        </Form.Item>
+          <Form.Item
+            name="qty"
+            label="Quantity"
+            rules={[{ required: true, message: 'Please enter the quantity!' }]}
+          >
+            <InputNumber min={0} step={1} style={{ width: '100%' }} placeholder="Enter Item Quantity in MT"/>
+          </Form.Item>
+          <p
+            style={{
+              padding: '5px',
+              marginTop:'5px',
+              marginLeft:'5px',
+              backgroundColor: '#06c',
+              borderRadius: '5px',
+              color: 'white',
+            }}
+          >
+            MT
+          </p>
+        </div>
 
       </Form>
     </Modal>
