@@ -1,10 +1,18 @@
-import React from 'react';
-//import moment from "moment";
-import { Modal, Form, Input, InputNumber, Button, DatePicker, Select } from 'antd';
+import { useState}from 'react';
+import { Modal, Form, Input, InputNumber, Button, Select } from 'antd';
 
-const ModalCalendar = ({ visible, onClose, onSubmit, selectedDate}) => {
+import {
+  useCheckPurchaseItemRationMutation
+} from '../../redux/services/products/productApi';
+
+const AddPlanModal = ({ visible, onClose, onSubmit, selectedDate}) => {
 
   console.log(selectedDate, 'ModalCalendar-> Selected Date');
+
+  const [messageToModal, setMessageToModal] = useState('');
+  const [qty, setQty] = useState(0);
+
+  const [checkPurchaseItemRatio] = useCheckPurchaseItemRationMutation();
 
   const [form] = Form.useForm();
 
@@ -16,24 +24,56 @@ const ModalCalendar = ({ visible, onClose, onSubmit, selectedDate}) => {
     form
       .validateFields()
       .then((values) => {
-        onSubmit(values); // Call the onSubmit function with the form values
-        form.resetFields();
-        onClose();
+
+        console.error('handleOk qty', qty);
+        console.error('handleOk values', values.qty);
+
+        if(values.qty > 0 && values.qty <= qty){
+          onSubmit(values); // Call the onSubmit function with the form values
+          form.resetFields();
+          setMessageToModal('');
+          onClose();
+        }else{
+          //form.setFieldError('qty')
+          
+        }
+    
       })
       .catch((errorInfo) => {
         console.error('Validation Failed:', errorInfo);
       });
   };
 
+  const onChange = async (value : any) => {
+    console.error('onChange: own ', value);
+
+    //onChangeModal(value);
+
+    const { data = [] } = await checkPurchaseItemRatio({planDate:selectedDate, itemId:value, planQty:0});
+    //console.log(res,'onChange')
+    setMessageToModal(data[0].message)
+    setQty(data[0].remained)
+    form.setFieldValue('qty',data[0].remained)
+
+    //const { data = [] } = useCheckPurchaseItemRationQuery({
+    //});
+
+    //const { data = [] } = useGetAllPlansQuery({});
+    
+   // console.log(data,'onChange')
+
+  }
+
   
   const handleCancel = () => {
     form.resetFields();
+    setMessageToModal('');
     onClose();
   };
 
   return (
     <Modal
-      visible={visible}
+      open={visible}
       title="Supplier"
       onOk={handleOk}
       onCancel={handleCancel}
@@ -92,6 +132,7 @@ const ModalCalendar = ({ visible, onClose, onSubmit, selectedDate}) => {
         >
           <Select 
             //showSearch
+            onChange={onChange}
             placeholder="Select Material"
             style={{ width: '100%' }}
             options={[
@@ -101,15 +142,19 @@ const ModalCalendar = ({ visible, onClose, onSubmit, selectedDate}) => {
               },
               {
                 value: '2',
-                label: 'Pure Lead 99.97% & 99.985% ',
+                label: 'Pure Lead 99.97%',
+              },
+              {
+                value: '5',
+                label: 'Pure Lead 99.985% ',
               },
               {
                 value: '3',
-                label: 'Lead Antimony 2.75%',
+                label: 'Lead Alloy 2.75%',
               },
               {
                 value: '4',
-                label: 'Lead Antimony 3.2%',
+                label: 'Lead Alloy 3.2%',
               },
             ]}
           />
@@ -162,6 +207,11 @@ const ModalCalendar = ({ visible, onClose, onSubmit, selectedDate}) => {
           >
             MT
           </p>
+          <p style={{
+              paddingLeft: '5px',
+              fontSize:11,
+              color: 'red',
+            }}> {messageToModal} </p>
         </div>
 
       </Form>
@@ -169,4 +219,4 @@ const ModalCalendar = ({ visible, onClose, onSubmit, selectedDate}) => {
   );
 };
 
-export default ModalCalendar;
+export default AddPlanModal;

@@ -151,6 +151,7 @@ span.flatpickr-weekday,
   background-repeat: no-repeat;
   background-size: 20px;
 }
+
 .custom-input-date-1::-webkit-calendar-picker-indicator {
   background-image: url(./images/icon/icon-calendar.svg);
 }
@@ -163,10 +164,32 @@ span.flatpickr-weekday,
 }
 
 
+.book-filled-container {
+  position: relative;
+  z-index: 1;
+  left: 0;
+  top: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  flex-direction: column;
+}
+
+
 /* -------------------------  */
 
 /*https://blog.logrocket.com/react-custom-datepicker-step-by-step/*/
 /* adds 'n' after "Su"*/
+
+
+
+.my-calendar table tr td{
+  border-left: 1px solid rgb(202, 201, 201);
+  border-right: 1px solid rgb(202, 201, 201);
+  height: "auto";
+}
+
 .my-calendar table thead tr > th:nth-child(1)::after{
   content: 'Sunday';
   position: absolute;

@@ -19,7 +19,7 @@ import {
 
 import Loading from '../loading';
 import dayjs from 'dayjs';
-import MyFormModal from '../pages/UiElements/Modal';
+import MyFormModal from './UiElements/AddPlanModal';
 import 'react-tooltip/dist/react-tooltip.css'
 //import { Tooltip as ReactTooltip } from 'react-tooltip'
 import { Tooltip } from 'react-tooltip'

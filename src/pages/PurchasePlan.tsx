@@ -1,6 +1,5 @@
-import React, { useState , useLayoutEffect, useRef} from 'react';
+import React, {useState} from 'react';
 import type { Dayjs } from 'dayjs';
-import moment from "moment";
 import type { BadgeProps, CalendarProps } from 'antd';
 import { Badge, Calendar, Select,Input, message,Typography, Row, Col, Radio} from 'antd';
 import {
@@ -14,13 +13,16 @@ import {
   useGetAllPlansQuery,
   useAddPurchasePlanDataMutation,
   useAddPlanForSupplierDataMutation,
+  useDeletePlanDataMutation
 } from '../redux/services/products/productApi';
 
 import dayjs from 'dayjs';
-import MyFormModal from '../pages/UiElements/Modal';
 import 'react-tooltip/dist/react-tooltip.css'
 import { Tooltip } from 'react-tooltip'
 import LoadingModal from './UiElements/LoadingModal';
+import AddPlanModal from './UiElements/AddPlanModal';
+import PlanDetailsModal from './UiElements/PlanDetailsModal';
+import Breadcrumb from '../components/Breadcrumb';
 
 const getMonthData = (value: Dayjs) => {
   if (value.month() === 8) {
@@ -30,38 +32,48 @@ const getMonthData = (value: Dayjs) => {
 
 const PurchasePlan = () => {
 
-  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [isVisibleAddPlanModal, setIsVisibleAddPlanModal] = useState(false);
+  const [isVisiblePlanDetilsModal, setIsVisiblePlanDetilsModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState('');
   const [monthWiseTotalQty, setMonthWiseTotalQty] = useState(0.0);
-  const [selecteddate1, setSelecteddate1] = useState(moment());
-
-  /*
-    const refContainer = useRef<HTMLDivElement>(null);
-  const refPicker = useRef<HTMLDivElement>(document.createElement("div"));
-  useLayoutEffect(() => {
-    if (refContainer.current) {
-      refContainer.current.appendChild(refPicker.current);
-    }
-  }, []);
-  */
+  const [selectedSupplierid, setSelectedSupplierid] = useState(0);
+  const [selectedSupplierName, setSelectedSupplierName] = useState('');
+  const [selectedSupplierItems, setSelectedSupplierItems] = useState([]);
+  const [selectedTotalQty, setSelectedTotalQty] = useState(0);
 
   const handleLoading = () => {
     setLoading(!loading);
   };
 
-  const showModal = (selectedDate : string) => {
-    console.log(selectedDate, 'showModal-> Selected Date');
+  const showAddPlanModal = (selectedDate : string) => {
+    console.log(selectedDate, 'showAddPlanModal-> Selected Date');
     setSelectedDate(selectedDate);
-    setIsModalVisible(true);
+    setIsVisibleAddPlanModal(true);
   };
 
-  const handleCancel = () => {
-    setIsModalVisible(false);
+  const handleCancelAddPlanModal = () => {
+    setIsVisibleAddPlanModal(false);
+  };
+
+  const showPlanDetailsModal = (selectedDate : string, supplierid : number, supplierName : string, totalQty : any, items : any) => {
+    console.log(selectedDate, 'showPlanDetailsModal-> '+supplierid);
+   
+    setSelectedDate(selectedDate);
+    setSelectedSupplierid(supplierid);
+    setSelectedSupplierName(supplierName);
+    setSelectedSupplierItems(items);
+    setSelectedTotalQty(totalQty);
+    setIsVisiblePlanDetilsModal(true);
+  };
+
+  const handleCancelPlanDetailsModal = () => {
+    setIsVisiblePlanDetilsModal(false);
   };
 
   const [addPlanForSingleDay] = useAddPurchasePlanDataMutation();
   const [addPlanForSupplier] = useAddPlanForSupplierDataMutation();
+  const [deletePlan] = useDeletePlanDataMutation();
 
   /* Add Plan for Supplier Modal -> On Submit Method */
   const onSubmit = async (values:any) => {
@@ -88,8 +100,45 @@ const PurchasePlan = () => {
     } finally {
       setLoading(false);
       // Close the modal after submission
-      handleCancel();
+      handleCancelAddPlanModal();
     }
+  };
+
+
+  /* Call From  PlanDetailsModal, when delete the item */
+  const onDeletePlan = async (date:string, supplierId:number, itemId:number ) => {
+
+      try {
+
+        console.log('onDeletePlan:', date + ',supplierId '+supplierId+', itemId '+itemId);
+
+        setLoading(true);
+
+        const apiDataResponse = {planDate: date, supplierId:supplierId, itemId: itemId}
+  
+        const res = await deletePlan(apiDataResponse);
+        const errorMessage = res?.data?.message;
+  
+        if (res) {
+          if (res?.data?.code === 400) {
+            message.error(errorMessage);
+            console.log(errorMessage, 'error message');
+          } else if ('data' in res && res.data) {
+            message.success('Plan deleted successfully!');
+            setLoading(false);
+          } else {
+            message.error('Error! Insert Failed');
+          }
+        }
+        
+       
+      } catch (err) {
+        console.error(err.message);
+      } finally {
+        setLoading(false);
+        // Close the modal after submission
+        handleCancelPlanDetailsModal();
+      }
   };
 
   // get data
@@ -106,7 +155,13 @@ const PurchasePlan = () => {
       planDate,
       totalQty,
       hasUnprocessedQty,
-      suppliers,
+      totalUnProcessedQty,
+      hardLead_Status,
+      pureLead_99_97_Status,
+      pureLead_99_98_Status,
+      leadAlloy_2_75_Status,
+      leadAlloy_3_2_Status,
+      suppliers
     }: {
       id: number;
       year:number;
@@ -114,7 +169,14 @@ const PurchasePlan = () => {
       day:number;
       planDate: string; // Add the type for the 'date' property
       totalQty : number;
+      totalUnProcessedQty:number,
       hasUnprocessedQty:boolean;
+      hardLead_Status:string;
+      pureLead_99_97_Status:string;
+      pureLead_99_98_Status:string;
+      leadAlloy_2_75_Status:string;
+      leadAlloy_3_2_Status:string;
+
       suppliers : {
         childId:number;
         masterId:number;
@@ -129,6 +191,7 @@ const PurchasePlan = () => {
           supplierId:number;
           itemId:number;
           itemName:string;
+          itemDisplayName:string;
           itemRate:number;
           vat:number;
           ait:number;
@@ -144,6 +207,12 @@ const PurchasePlan = () => {
       planDate,
       totalQty,
       hasUnprocessedQty,
+      totalUnProcessedQty,
+      hardLead_Status,
+      pureLead_99_97_Status,
+      pureLead_99_98_Status,
+      leadAlloy_2_75_Status,
+      leadAlloy_3_2_Status,
       suppliers,
     }),
   );
@@ -176,11 +245,18 @@ const PurchasePlan = () => {
 
     // Map the filtered data to the desired format for the calendar
     if(filteredData && filteredData.length > 0){
-      const listData = filteredData.map(
-        (item: { totalQty: any; suppliers: any, hasUnprocessedQty: boolean }) => ({
+      const listData = filteredData.map (
+        (item: { totalQty: any, totalUnProcessedQty: any, suppliers: any, hasUnprocessedQty: boolean,hardLead_Status:string, 
+          pureLead_99_97_Status:string, pureLead_99_98_Status:string, leadAlloy_2_75_Status:string, leadAlloy_3_2_Status:string }) => ({
           type: item.hasUnprocessedQty?'error':'success',
           content: `${item.totalQty}`,
-          suppliers: item.suppliers
+          totalUnProcessedQty: item.totalUnProcessedQty,
+          suppliers: item.suppliers,
+          hardLead_Status:item.hardLead_Status,
+          pureLead_99_97_Status:item.pureLead_99_97_Status,
+          pureLead_99_98_Status:item.pureLead_99_98_Status,
+          leadAlloy_2_75_Status:item.leadAlloy_2_75_Status,
+          leadAlloy_3_2_Status:item.leadAlloy_3_2_Status
         }),
       );
   
@@ -189,7 +265,13 @@ const PurchasePlan = () => {
       return [{
         type: 'default',
         content: '',
-        suppliers: []
+        totalUnProcessedQty: 0,
+        suppliers: [],
+        hardLead_Status:'',
+        pureLead_99_97_Status:'',
+        pureLead_99_98_Status:'',
+        leadAlloy_2_75_Status:'',
+        leadAlloy_3_2_Status:''
       }]
     }
     
@@ -214,17 +296,29 @@ const PurchasePlan = () => {
 
     var totalDayQty : number = 0.0
     var suppliers : any = []
+    var hardLead_Status : String = "";
+    var pureLead_99_97_Status : String = "";
+    var pureLead_99_98_Status : String = "";
+    var leadAlloy_2_75_Status : String = "";
+    var leadAlloy_3_2_Status : String = "";
+
+
     if(listData && listData.length > 0){
       totalDayQty = listData[0].content;
       suppliers = listData[0].suppliers; 
+      hardLead_Status = listData[0].hardLead_Status;
+      pureLead_99_97_Status = listData[0].pureLead_99_97_Status;
+      pureLead_99_98_Status = listData[0].pureLead_99_98_Status;
+      leadAlloy_2_75_Status = listData[0].leadAlloy_2_75_Status;
+      leadAlloy_3_2_Status = listData[0].leadAlloy_3_2_Status;
     }
 
     //const currentDateString = value.format('DD-MM-YYYY');
     const currentDateString = value.format('YYYY-MM-DD');
 
     //console.log(currentDateString, 'Selected Date');
-    console.log(totalDayQty, 'totalDayQty');
-    console.log(suppliers, 'suppliers');
+    //console.log(totalDayQty, 'totalDayQty');
+    //console.log(suppliers, 'suppliers');
 
     const handleEdit = (totalDayQt : any) => {
       console.log('handleEdit : 123');
@@ -272,7 +366,7 @@ const PurchasePlan = () => {
         } finally {
           setLoading(false);
           // Close the modal after submission
-          //handleCancel();
+          //handleCancelAddPlanModal();
         }
 
         setEditing(false);
@@ -286,34 +380,74 @@ const PurchasePlan = () => {
     return (
       <div className="date-cell-wrapper">
         {/*<div className="sticky-container">*/}
+        
         <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-        <div>
-            <Tooltip id="my-tooltip" />
-            {suppliers.map((supplier: any) => {
+          <div>
+              <Tooltip id="my-tooltip" />
+              {suppliers.map((supplier: any) => {
 
-              var itemName = '';
-              supplier.items.forEach((item : any) => {
-                itemName += ', '+item.itemName;
-              });
+                //var itemName = '';
+                //supplier.items.forEach((item : any) => {
+                //  itemName += ', '+item.itemName;
+               // });
 
-              return (
-                <>
-                 <a
-                  data-tooltip-id="my-tooltip"
-                  data-tooltip-content={supplier.supplierName +', '+ supplier.totalQty + "M" + itemName}
-                  data-tooltip-place="top"
-                  data-tooltip-type="success">
-                  <BookFilled style={{ color: supplier.supplierColorCode}}/></a>
-                </>
-              )
-            })}
-          </div>
-          <PlusCircleOutlined className="sticky-plus" type="primary" onClick={() => showModal(currentDateString)} />
+                return (
+                  <>
+                  <a
+                    data-tooltip-id="my-tooltip"
+                    data-tooltip-content={supplier.supplierName +', '+ supplier.totalQty + "MT"}
+                    data-tooltip-place="top"
+                    data-tooltip-type="success">
+                    <BookFilled style={{ color: supplier.supplierColorCode}} onClick={() => {showPlanDetailsModal(currentDateString,supplier.supplierId,supplier.supplierName,supplier.totalQty,supplier.items)}} /></a>
+                 
+                  </>
+                )
+              })}
+            </div>
+            {totalDayQty > 0 ? (
+               <PlusCircleOutlined className="sticky-plus" type="primary" onClick={() => showAddPlanModal(currentDateString)} />
+            ):(<></>)}
+           
         </div>
+
+        { totalDayQty > 0 ? (
+          <div className="flex flex-row" style={{ paddingTop: '5px' }}>
+            
+            <a
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content={"Hard Lead, "+hardLead_Status}
+              data-tooltip-place="top"
+              data-tooltip-type="success">  <Badge className="flex flex-row" status= {hardLead_Status=='Ok'?'success':'error'} style={{ paddingRight: '4px' }} /></a>
+            <a
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content={"Pure Lead 99.97%, "+pureLead_99_97_Status}
+              data-tooltip-place="top"
+              data-tooltip-type="success">  <Badge className="flex flex-row" status= {pureLead_99_97_Status=='Ok'?'success':'error'} style={{ paddingRight: '4px' }} /></a>
+            <a
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content={"Pure Lead  99.985%, "+pureLead_99_98_Status}
+              data-tooltip-place="top"
+              data-tooltip-type="success">  <Badge className="flex flex-row" status= {pureLead_99_98_Status=='Ok'?'success':'error'} style={{ paddingRight: '4px' }} /></a>
+            <a
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content={"Lead Alloy 2.75%, "+leadAlloy_2_75_Status}
+              data-tooltip-place="top"
+              data-tooltip-type="success">  <Badge className="flex flex-row" status= {leadAlloy_2_75_Status=='Ok'?'success':'error'} style={{ paddingRight: '4px' }} /></a>
+            <a
+              data-tooltip-id="my-tooltip"
+              data-tooltip-content={"Lead Alloy 3.2%, "+leadAlloy_3_2_Status}
+              data-tooltip-place="top"
+              data-tooltip-type="success">  <Badge className="flex flex-row" status= {leadAlloy_3_2_Status=='Ok'?'success':'error'} style={{ paddingRight: '4px' }} /></a>
+          </div>
+          ): (
+            <></>
+          )
+        }
+
         <div className="events">
           {suppliers.length > 0 || totalDayQty > 0.0 || isEditing ? (
               listData.map((item: any) => (
-                <div style={{ paddingTop: '20px' }}>
+                <div style={{ paddingTop: '10px' }}>
                   
                     <div
                       className="event invisible left-1 z-99 flex w-full flex-row justify-between rounded-sm border-l-[3px] border-primary bg-gray px-2 py-1 text-left opacity-0 dark:bg-meta-4 md:visible md:opacity-100"
@@ -323,7 +457,7 @@ const PurchasePlan = () => {
                           <input
                             style={{ width: '100%', height:27}}
                             type="text"
-                            placeholder="Edit"
+                            placeholder="Enter Total Qty"
                             value={editedContent}
                             onChange={(e) => setEditedContent(e.target.value)}
                           />
@@ -344,7 +478,7 @@ const PurchasePlan = () => {
                         <React.Fragment>
                         <Badge
                               status={item.type as BadgeProps['status']}
-                              text={item.content}
+                              text={`${item.content - item.totalUnProcessedQty}` +'-'+ item.content}
                           />
                          <div
                           style={{
@@ -378,52 +512,20 @@ const PurchasePlan = () => {
     return info.originNode;
   };
 
- // if(selectedDate{
- //   setSelectedDate (new Date().toLocaleDateString())
- // }
-
- const onselect = (date: any) => {
-  if (date.isSame(selecteddate1, 'month')) {
-    setSelecteddate1(date)
-  }
-};
-
- const disableddate = (currentdate: any) => {
-    return currentdate.isSame(selecteddate1, 'month');
-  };
-  
-  function onChange (e: { target: { value: any; name: any; }; }){
-            
-    const value = e.target.value;
-    setLavorazione({
-        ...setLavorazione,
-        [e.target.name]:value
-    });
-    
-    console.log('[CHANGE-VALUE]', value)
- }
-
-  /*
-  if (!data || loading) {
-    return <Loading />;
-  }
-  */
 
   return (
     <>
+      <Breadcrumb pageName="Purchase Plan" />
+      
       <Calendar 
         className="my-calendar"
         cellRender={cellRender} 
-       // disabledDate={disableddate}
-        //onSelect={onselect}
-        //onChange={(value) =>
-         // onChange({ target: { value, name: "date" } })
-        //}
-       // value={selecteddate1}
-        //defaultValue={dayjs('2024/02/10', 'YYYY/MM/DD')}
-        headerRender={({ value, type, onChange, onTypeChange }) => {
+        style={{
+          height: "auto",
+          width: "auto"
+        }}
 
-          //console.log('Selected Day-Month-Year', value.day(),value.month()+1,value.year());
+        headerRender={({ value, type, onChange, onTypeChange }) => {
 
           calculateMonthWiseTotalQty(value.year(),value.month()+1);
 
@@ -460,9 +562,8 @@ const PurchasePlan = () => {
 
           return (
             <div style={{ padding: 16 }}>
-              <Typography.Title level={4}> Purchase Plan </Typography.Title>
               
-               {/* start custom div */}
+               {/* start custom div  <Typography.Title level={4}> Purchase Plan </Typography.Title> */}
               <div style={{ width: '50%', paddingTop : 10  }}>
                 <div
                   style={{
@@ -499,18 +600,7 @@ const PurchasePlan = () => {
                     MT
                   </p>
                 </div>
-                {/*
-                 <div
-                  style={{
-                    paddingTop: '10px',
-                    paddingBottom: '10px',
-                  }}
-                  className="flex justify-end"
-                >
-                  <Button htmlType="submit" style={{color: 'black', height : '38px' , width : '100px',}}>Continue</Button>
-                </div>
-                */}
-               
+                
                  <div style={{
                     paddingTop: '10px',
                   }}>
@@ -563,14 +653,27 @@ const PurchasePlan = () => {
           );
         }}
       />
-      <MyFormModal
-        visible={isModalVisible}
-        onClose={handleCancel}
+      
+      <AddPlanModal
+        visible={isVisibleAddPlanModal}
+        onClose={handleCancelAddPlanModal}
         onSubmit={onSubmit}
         selectedDate = {selectedDate}
       />
+
+      <PlanDetailsModal
+        visible={isVisiblePlanDetilsModal}
+        onClose={handleCancelPlanDetailsModal}
+        onDelete={onDeletePlan}
+        selectedDate = {selectedDate}
+        supplierid = {selectedSupplierid}
+        selectedSupplierName = {selectedSupplierName}
+        selectedTotalQty = {selectedTotalQty}
+        items = {selectedSupplierItems}
+      />
      
       {<LoadingModal isLoading={loading} onClose = {handleLoading} />}
+      
     </>
   );
 };

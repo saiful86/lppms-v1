@@ -3,6 +3,11 @@ import { lazy } from 'react';
 const PurchasePlan = lazy(() => import('../pages/PurchasePlan'));
 const PaymentPlan = lazy(() => import('../pages/PaymentPlan'));
 
+const Items = lazy(() => import('../pages/Items'));
+const Suppiers = lazy(() => import('../pages/Suppliers'));
+const PaymentPolicy = lazy(() => import('../pages/PaymentPolicy'));
+const PurchaseItemRation = lazy(() => import('../pages/PurchaseItemRatio'));
+
 const Calendar = lazy(() => import('../pages/Calendar'));
 const Chart = lazy(() => import('../pages/Chart'));
 const FormElements = lazy(() => import('../pages/Form/FormElements'));
@@ -16,14 +21,38 @@ const Buttons = lazy(() => import('../pages/UiElements/Buttons'));
 const coreRoutes = [
   {
     path: '/purchase-plan',
-    title: 'PurchasePlan',
+    title: 'Purchase Plan',
     component: PurchasePlan,
   },
 
   {
     path: '/payment-plan',
-    title: 'PaymentPlan',
+    title: 'Payment Plan',
     component: PaymentPlan,
+  },
+
+  {
+    path: '/items',
+    title: 'Items',
+    component: Items,
+  },
+
+  {
+    path: '/suppliers',
+    title: 'Suppliers',
+    component: Suppiers,
+  },
+
+  {
+    path: '/policies/payment-policy',
+    title: 'Payment Policy',
+    component: PaymentPolicy,
+  },
+
+  {
+    path: '/policies/purchase-item-ratio',
+    title: 'Purchase Item Ration',
+    component: PurchaseItemRation,
   },
 
   {

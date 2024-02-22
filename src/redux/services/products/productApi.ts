@@ -3,6 +3,7 @@ import { baseApi } from "../baseApi";
 
 export const transTypeApi = baseApi.injectEndpoints({
   endpoints: (build) => ({
+
     // get all  plans
     getAllPlans: build.query({
       query: (arg: Record<string, any>) => ({
@@ -18,6 +19,26 @@ export const transTypeApi = baseApi.injectEndpoints({
         // },
       }),
       providesTags: [tagTypes.plans],
+    }),
+
+    // get all  Payments
+    getAllPayments: build.query({
+      query: (arg: Record<string, any>) => ({
+        url: `/api/PurchasePlan/purchase-payment-list`,
+        method: "GET",
+        params: arg,
+      }),
+      providesTags: [tagTypes.plans],
+    }),
+    
+    // check purchase item ration
+    checkPurchaseItemRation: build.mutation({
+      query: (arg: Record<string, any>) => ({
+        url: "/api/purchasePlan/check-purchase-item-ratio",
+        method: "GET",
+        params: arg,
+      }),
+      invalidatesTags: [tagTypes.plans],
     }),
     
     // add a purchase plan 
@@ -40,6 +61,26 @@ export const transTypeApi = baseApi.injectEndpoints({
       invalidatesTags: [tagTypes.plans],
     }),
 
+    // deletee plan item and supplier wise
+    deletePlanData: build.mutation({
+        query: (data) => ({
+          url: "/api/PurchasePlan/delete-purchase-plan",
+          method: "DELETE",
+          data,
+        }),
+        invalidatesTags: [tagTypes.plans],
+    }),
+  
+    // add payment for supplier
+    addPayment: build.mutation({
+        query: (data) => ({
+          url: "/api/PurchasePlan/add-purchase-payment",
+          method: "POST",
+          data,
+        }),
+        invalidatesTags: [tagTypes.plans],
+    }),
+
     // get single transaction
     getSingleTransaction: build.query({
       query: (id: string | string[] | undefined) => ({
@@ -48,6 +89,7 @@ export const transTypeApi = baseApi.injectEndpoints({
       }),
       providesTags: [tagTypes.plans],
     }),
+
     // create a new transaction
     addTransaction: build.mutation({
       query: (data) => ({
@@ -67,13 +109,18 @@ export const transTypeApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: [tagTypes.plans],
     }),
+
   }),
 });
 
 export const {
   useGetAllPlansQuery,
+  useGetAllPaymentsQuery,
+  useCheckPurchaseItemRationMutation,
   useAddPurchasePlanDataMutation,
   useAddPlanForSupplierDataMutation,
+  useDeletePlanDataMutation,
+  useAddPaymentMutation,
   useGetSingleTransactionQuery,
   useAddTransactionMutation,
   useUpdateTransactionMutation,

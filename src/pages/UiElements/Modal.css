@@ -1,0 +1,156 @@
+
+.modal-container {
+    padding-top: 16px;
+    padding-bottom: 10px;
+    align-items: center;
+    justify-content: center;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: row;
+    margin-bottom: 1rem;
+  }
+
+.form-group input,
+.form-group textarea,
+.form-group select {
+  border: 1px solid black;
+  border-radius: 0.3rem;
+  padding: 0.2rem;
+  font-size: 1rem;
+}
+
+.form-group label {
+  margin-right: 0.4rem;
+  margin-bottom: 0.2rem;
+}
+
+.input-custom { 
+  border: 1px solid black;
+  width: 120px;
+  border-radius: 0.3rem;
+  padding: 2px;
+  font-size: 1rem;
+}
+
+.error {
+  background-color: #f8d7da;
+  color: #df4759;
+  padding: 0.5rem;
+  border-radius: 0.3rem;
+  margin-bottom: 1rem;
+}
+
+.table-wrapper {
+    width: 100%;
+}
+  
+.table {
+    display: block;
+    overflow: hidden;
+    table-layout: fixed;
+    border-collapse: collapse;
+    box-shadow: 0px 2px 5px #ccc;
+    border-radius: 5px;
+    white-space: nowrap;
+    width: 100%;
+    max-width: 100%;
+    margin: auto;
+    table-layout: auto;
+    overflow-x: auto;
+}
+
+.table thead {
+    background-color: #ccc;
+    color: #222;
+}
+
+.table th,
+.table td {
+    padding: 0.8rem;
+}
+
+.table td {
+    border-top: 0.5px solid #ddd;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.table tbody tr:hover {
+    background-color: #eee;
+}
+
+.expand {
+    width: 100%;
+}
+
+.label {
+    border-radius: 3px;
+    padding: 0.3rem;
+    color: white;
+}
+
+.label-draft {
+    background-color: #42a942;
+}
+
+.label-live {
+    background-color: #42a942;
+}
+
+.label-error {
+    background-color: #d9534f;
+}
+
+.label-paid {
+    background-color: #42a942;
+}
+
+.label-overdue {
+    background-color: #db1a34;
+}
+
+.label-due {
+    background-color: #d9534f;
+}
+
+.label-upcoming {
+    background-color: #f0e336;
+}
+
+.label-later {
+    background-color: #868383;
+}
+
+
+.actions {
+    display: flex;
+    justify-content: space-around;
+}
+
+.actions svg {
+    cursor: pointer;
+}
+
+.delete-btn {
+    color: #e10d05;
+}
+
+.bookfilled{
+    padding: 1px;
+    margin-left: 1px;
+    margin-right: 1px;
+    margin-top: 1px;
+    margin-bottom: 1px;
+    background-color: #fff;
+}
+
+.bookfilled-error {
+    margin: 1px;
+    background-color: #e10d05; 
+}
+
+.bookfilled-live {
+    background-color: #fff;
+}

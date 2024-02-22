@@ -4,24 +4,23 @@ import moment from "moment";
 import type { BadgeProps, CalendarProps } from 'antd';
 import { Badge, Calendar, Select, Input, message,Typography, Row, Col, Radio} from 'antd';
 
+import Breadcrumb from '../components/Breadcrumb';
+
 import {
-  EditOutlined,
   SaveOutlined,
   BookFilled,
-  PlusCircleOutlined,
 } from '@ant-design/icons';
 
 import {
-  useGetAllPlansQuery,
-  useAddPurchasePlanDataMutation,
-  useAddPlanForSupplierDataMutation,
+  useAddPaymentMutation,
+  useGetAllPaymentsQuery 
 } from '../redux/services/products/productApi';
 
 import dayjs from 'dayjs';
-import MyFormModal from '../pages/UiElements/Modal';
 import 'react-tooltip/dist/react-tooltip.css'
 import { Tooltip } from 'react-tooltip'
 import LoadingModal from './UiElements/LoadingModal';
+import PaymentSupplierWiseModal from './UiElements/PaymentSupplierWiseModal';
 
 
 const getMonthData = (value: Dayjs) => {
@@ -35,45 +34,97 @@ const PaymentPlan = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const [selectedDate, setSelectedDate] = useState('');
-  const [monthWiseTotalQty, setMonthWiseTotalQty] = useState(0.0);
+  const [monthWiseTotalAmount, setMonthWiseTotalAmount] = useState(0.0);
   const [selecteddate1, setSelecteddate1] = useState(moment());
 
-  /*
-    const refContainer = useRef<HTMLDivElement>(null);
-  const refPicker = useRef<HTMLDivElement>(document.createElement("div"));
-  useLayoutEffect(() => {
-    if (refContainer.current) {
-      refContainer.current.appendChild(refPicker.current);
-    }
-  }, []);
-  */
+  const [selectedSupplierid, setSelectedSupplierid] = useState(0);
+  const [selectedSupplierName, setSelectedSupplierName] = useState('');
+  const [selectedTotalAmount, setSelectedTotalAmount] = useState(0);
+  const [isFullPayment, setFullPayment] = useState(false);
+
+  const [addPaymentApi] = useAddPaymentMutation();
+
+  let arraList : {amount: number,paid: number,isFullPayment:boolean, payment: number, itemId: number, itemName: string} [] = [];
+  const [paymentList, setPaymentList] = useState(arraList);
+
+  /* Show Payment Modal */
+  const showPaymentModal = (selectedDate : string, isFullPayment:boolean , supplierid : number, supplierName : string, totalAmount : any,items : any) => {
+    
+    console.log(selectedDate, 'showPaymentModal -> '+supplierid);
+
+    const list : {amount: number,paid: number, isFullPayment:boolean, payment: number, itemId: number, itemName: string} [] = [];
+    items.forEach(item =>{
+      list.push({amount:item.amount,paid:item.payment,isFullPayment:item.isFullPayment, payment: item.amount - item.payment, itemId: item.itemId,itemName:item.itemDisplayName})
+    });
+
+    setPaymentList(list);
+    setSelectedDate(selectedDate);
+    setSelectedSupplierid(supplierid);
+    setSelectedSupplierName(supplierName);
+    setSelectedTotalAmount(totalAmount);
+    setFullPayment(isFullPayment);
+    setIsModalVisible(true);
+
+  };
+
 
   const handleLoading = () => {
     setLoading(!loading);
   };
 
-  const showModal = (selectedDate : string) => {
-    console.log(selectedDate, 'showModal-> Selected Date');
-    setSelectedDate(selectedDate);
-    setIsModalVisible(true);
-  };
 
   const handleCancel = () => {
     setIsModalVisible(false);
   };
 
-  const [addPlanForSingleDay] = useAddPurchasePlanDataMutation();
-  const [addPlanForSupplier] = useAddPlanForSupplierDataMutation();
+  /* Call this function from  PaymentSupplierWiseModal , when change amount field */
+  const onChangeAmount = async (itemId: number, e : any, index : any) => {
+    //console.error('onChange: own ', itemId +','+e.target.value+","+index);
+  
+    const list = [...paymentList];
+    let { value, max } = e.target;
+    let payment = list[index];
+    if(value <= Number(max) ) {
+      //payment.payment = Number(value);
+      payment.payment = value;
+    }
 
-  /* Add Plan for Supplier Modal -> On Submit Method */
-  const onSubmit = async (values:any) => {
+    /*
+    list.forEach(item =>{
+      if(item.itemId === itemId){
+        let { value, min, max } = e.target;
+        //console.log("onChangeAmount", 'Max '+max +', value '+value)
+        //value = Math.max(Number(min), Math.min(Number(max), Number(value)));
+        //item.payment = value;
+        if(value <= Number(max) ) {
+          item.payment = value;
+        }
+      }
+    });*/
+  
+    setPaymentList(list);
+  
+   }
+
+  /* Call this function from  PaymentSupplierWiseModal when click on Submit button */
+  const onSubmitPayment = async () => {
     try {
-      console.log('on submit:', values);
+      
+      const _paymentList = [...paymentList];
+    
       setLoading(true);
 
-      const res = await addPlanForSupplier(values);
-      const errorMessage = res?.data?.message;
+      const apiRequestDataList : {date: string, purchasePlanMasterId: number, supplierId:number, itemId: number, payment: number} [] = [];
+      _paymentList.forEach(item =>{
+        apiRequestDataList.push({date: selectedDate, purchasePlanMasterId: 0, supplierId:selectedSupplierid, itemId: item.itemId, payment: item.payment})
+      });
 
+
+      console.log(apiRequestDataList, 'onSubmitPayment');
+
+      const res = await addPaymentApi(apiRequestDataList);
+      const errorMessage = res?.data?.message;
+      
       if (res) {
         if (res?.data?.code === 400) {
           message.error(errorMessage);
@@ -85,70 +136,84 @@ const PaymentPlan = () => {
           message.error('Error! Insert Failed');
         }
       }
+      
+
     } catch (err) {
       console.error(err.message);
     } finally {
-      setLoading(false);
+     // setLoading(false);
       // Close the modal after submission
       handleCancel();
     }
   };
 
-  // get data
-  const { data = [] } = useGetAllPlansQuery({});
 
+
+  // get data
+  const { data = [] } = useGetAllPaymentsQuery({});
 
   // Destructuring the array of objects
   const destructuredData = data.map(
     ({
       id,
+      purchasePlanMasterId,
       year,
       month,
       day,
       planDate,
-      totalQty,
       totalAmount,
-      hasUnprocessedQty,
+      totalPayment,
+      isFullPayment,
+      paymentStatus,
       suppliers,
     }: {
       id: number;
+      purchasePlanMasterId:number;
       year:number;
       month:number;
       day:number;
       planDate: string; // Add the type for the 'date' property
-      totalQty : number;
       totalAmount : number;
-      hasUnprocessedQty:boolean;
+      totalPayment : number;
+      isFullPayment:boolean;
+      paymentStatus:string,
       suppliers : {
-        childId:number;
-        masterId:number;
         supplierId:number;
         supplierName: string;
         supplierColorCode: string;
-        totalQty: number;
         totalAmount: number;
+        totalPayment: number;
+        isFullPayment:boolean;
         items :{
-          childId:number;
-          masterId:number;
+          paymentDetailsId:number;
+          purchasePlanMasterId:number;
+          paymentPlanMasterId:number;
           supplierId:number;
           itemId:number;
           itemName:string;
+          itemDisplayName:string;
           itemRate:number;
           vat:number;
           ait:number;
           itemQty:number;
           amount:number;
+          payment:number;
+          paymentDate:string;
+          isFullPayment:boolean;
+          remarks:string;
         }
       };
     }) => ({
       id,
+      purchasePlanMasterId,
       year,
       month,
       day,
       planDate,
-      totalQty,
       totalAmount,
-      hasUnprocessedQty,
+      totalPayment,
+      isFullPayment,
+      paymentStatus,
       suppliers,
     }),
   );
@@ -156,17 +221,16 @@ const PaymentPlan = () => {
   //console.log(destructuredData, 'Destructure Data');
 
   /* Calculate Month wise Total Quantity */
-  const calculateMonthWiseTotalQty = async (year : number, month : number) => {
-    //console.log('calculateMonthWiseTotalQty selected month',month)
-    var totalMonthQty = 0.0;
+  const calculateMonthWiseTotalAmount = async (year : number, month : number) => {
+    var totalMonthAmount = 0.0;
     if(destructuredData){
       destructuredData.forEach((data : any) => {
         if(data.year === year && data.month === month){
-          totalMonthQty += data.totalQty;
+          totalMonthAmount += data.totalAmount;
         }
       });
     }
-    setMonthWiseTotalQty(totalMonthQty);
+    setMonthWiseTotalAmount(totalMonthAmount);
   }
 
   const getCalendarCellData = (value: any) => {
@@ -182,9 +246,11 @@ const PaymentPlan = () => {
     // Map the filtered data to the desired format for the calendar
     if(filteredData && filteredData.length > 0){
       const listData = filteredData.map(
-        (item: { totalAmount: any; suppliers: any, hasUnprocessedQty: boolean }) => ({
-          type: item.hasUnprocessedQty?'error':'success',
+        (item: { totalAmount: any; totalPayment: any; suppliers: any, isFullPayment: boolean, paymentStatus:string}) => ({
+          type: item.isFullPayment?'success':'error',
           content: `${item.totalAmount}`,
+          payment: `${item.totalPayment}`,
+          paymentStatus:item.paymentStatus,
           suppliers: item.suppliers
         }),
       );
@@ -194,6 +260,7 @@ const PaymentPlan = () => {
       return [{
         type: 'default',
         content: '',
+        payment: '',
         suppliers: []
       }]
     }
@@ -218,10 +285,15 @@ const PaymentPlan = () => {
     const listData = getCalendarCellData(value);
 
     var totalDayQty : number = 0.0
+    var totalPayment : number = 0.0
     var suppliers : any = []
+    var paymentStatus : string = 'later';
+
     if(listData && listData.length > 0){
       totalDayQty = listData[0].content;
+      totalPayment = listData[0].payment;
       suppliers = listData[0].suppliers; 
+      paymentStatus = listData[0].paymentStatus; 
     }
 
     //const currentDateString = value.format('DD-MM-YYYY');
@@ -296,28 +368,37 @@ const PaymentPlan = () => {
             <Tooltip id="my-tooltip" />
             {suppliers.map((supplier: any) => {
 
-              var itemName = '';
-              supplier.items.forEach((item : any) => {
-                itemName += ', '+item.itemName;
-              });
+              //var itemName = '';
+             // supplier.items.forEach((item : any) => {
+              //  itemName += ', '+item.itemName;
+              //});
 
               return (
                 <>
-                 <a
-                  data-tooltip-id="my-tooltip"
-                  data-tooltip-content={supplier.supplierName +', '+ supplier.totalAmount + "Tk" + itemName}
-                  data-tooltip-place="top"
-                  data-tooltip-type="success">
-                  <BookFilled style={{ color: supplier.supplierColorCode}}/></a>
-                </>
+                <a
+                 className={supplier.isFullPayment?'bookfilled-live':'bookfilled-error'}
+                 data-tooltip-id="my-tooltip"
+                 data-tooltip-content={supplier.supplierName +', '+ supplier.totalAmount + "Tk, Due "+(supplier.totalAmount - supplier.totalPayment)+'Tk'}
+                 data-tooltip-place="top"
+                 data-tooltip-type="success"
+                 >
+                 <BookFilled className='bookfilled' style={{color: supplier.supplierColorCode}} onClick={() => {showPaymentModal(currentDateString,supplier.isFullPayment,supplier.supplierId,supplier.supplierName,supplier.totalAmount,supplier.items)}} /> </a>
+               </>
+                
               )
             })}
           </div>
         </div>
+        {
+          totalDayQty > 0.0 && <span className={"label label-"+paymentStatus} style={{ paddingTop: '0px',paddingBottom:'0px',fontSize:11}}>
+            {totalDayQty > 0.0 ? 'Paid: '+totalPayment+'Tk':''}
+          </span>
+        }
+        
         <div className="events">
           {suppliers.length > 0 || totalDayQty > 0.0 || isEditing ? (
               listData.map((item: any) => (
-                <div style={{ paddingTop: '20px' }}>
+                <div style={{ paddingTop: '2px' }}>
                   
                     <div
                       className="event invisible left-1 z-99 flex w-full flex-row justify-between rounded-sm border-l-[3px] border-primary bg-gray px-2 py-1 text-left opacity-0 dark:bg-meta-4 md:visible md:opacity-100"
@@ -358,7 +439,7 @@ const PaymentPlan = () => {
                             borderRadius: '3px',
                             color: 'black',
                           }}> Tk </div>
-                           <EditOutlined onClick={()=>handleEdit(totalDayQty)}  style={{height:27}}/>
+                           
                         </React.Fragment>
                       )}
                     </div>
@@ -396,25 +477,24 @@ const PaymentPlan = () => {
     return currentdate.isSame(selecteddate1, 'month');
   };
   
-  function onChange (e: { target: { value: any; name: any; }; }){
+  /*
+  function onChangess (e: { target: { value: any; name: any; }; }){
             
     const value = e.target.value;
+    /*
     setLavorazione({
         ...setLavorazione,
         [e.target.name]:value
     });
+    */
     
-    console.log('[CHANGE-VALUE]', value)
- }
-
-  /*
-  if (!data || loading) {
-    return <Loading />;
-  }
-  */
+    //console.log('[CHANGE-VALUE]', value)
+ /*}*/
 
   return (
     <>
+      <Breadcrumb pageName="Payment Plan" />
+      
       <Calendar 
         className="my-calendar"
         cellRender={cellRender} 
@@ -429,7 +509,7 @@ const PaymentPlan = () => {
 
           //console.log('Selected Day-Month-Year', value.day(),value.month()+1,value.year());
 
-          calculateMonthWiseTotalQty(value.year(),value.month()+1);
+          calculateMonthWiseTotalAmount(value.year(),value.month()+1);
 
           const start = 0;
           const end = 12;
@@ -464,9 +544,9 @@ const PaymentPlan = () => {
 
           return (
             <div style={{ padding: 16 }}>
-              <Typography.Title level={4}> Payment Plan </Typography.Title>
               
-               {/* start custom div */}
+              
+               {/* start custom div  <Typography.Title level={4}> Payment Plan </Typography.Title> */}
               <div style={{ width: '50%', paddingTop : 10  }}>
                 <div
                   style={{
@@ -484,13 +564,13 @@ const PaymentPlan = () => {
                       fontSize: 15
                     }}
                   >
-                    Total Materials for the selected month
+                    Total Amount for the selected month
                   </p>
                   <Input
                     style={{ width: 'auto', marginRight: '5px', height : '38px' }}
                     readOnly
                     placeholder="Total Required Materials"
-                    value={monthWiseTotalQty.toString()}
+                    value={monthWiseTotalAmount.toString()}
                   />
                   <p
                     style={{
@@ -567,11 +647,16 @@ const PaymentPlan = () => {
           );
         }}
       />
-      <MyFormModal
+      <PaymentSupplierWiseModal
         visible={isModalVisible}
         onClose={handleCancel}
-        onSubmit={onSubmit}
+        onSubmit={onSubmitPayment}
+        onChange = {onChangeAmount}
         selectedDate = {selectedDate}
+        selectedSupplierName = {selectedSupplierName}
+        selectedTotalAmount = {selectedTotalAmount}
+        paymentList = {paymentList}
+        isFullPayment = {isFullPayment}
       />
      
       {<LoadingModal isLoading={loading} onClose = {handleLoading} />}
